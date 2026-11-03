@@ -60,6 +60,18 @@
 
 ---
 
+## 🔁 研發全生命週期：規劃與實作的無限流動循環
+
+> **"Planning and Implementation is a Continuous Loop."** —— 規格不是一次性的靜態瀑布，實作持續反哺規劃。
+
+<p align="center">
+  <img src="./assets/continuous-loop.svg" alt="Token Survivor Continuous Loop Matrix" width="100%">
+</p>
+
+詳細研發覆盤請參閱：📄 **[完整研發時間軸與技術覆盤報告 (Engineering Retrospective)](./docs/engineering-retrospective-20261103.md)**。
+
+---
+
 ## 🛠️ 本機開發與測試
 
 ```bash

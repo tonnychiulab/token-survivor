@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 580" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&amp;family=Noto+Sans+TC:wght@600;800;900&amp;display=swap');
+      .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; }
+      .sans { font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif; }
+      .shadow { filter: drop-shadow(4px 4px 0px #111111); }
+      .heavy-shadow { filter: drop-shadow(7px 7px 0px #111111); }
+      .pulse-line { stroke-dasharray: 8 6; animation: dash 20s linear infinite; }
+      @keyframes dash { to { stroke-dashoffset: -1000; } }
+    </style>
+
+    <!-- Marker Arrow -->
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0022ff"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#e60000"/>
+    </marker>
+    <marker id="arrow-acid" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#111111"/>
+    </marker>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1000" height="580" fill="#e8e6df"/>
+  <rect x="18" y="18" width="964" height="544" fill="#f5f4ef" stroke="#111111" stroke-width="3" rx="6" class="heavy-shadow"/>
+
+  <!-- Subtle Blueprint Grid -->
+  <g stroke="#e2dfd5" stroke-width="1">
+    <line x1="60" y1="18" x2="60" y2="562"/>
+    <line x1="200" y1="18" x2="200" y2="562"/>
+    <line x1="350" y1="18" x2="350" y2="562"/>
+    <line x1="500" y1="18" x2="500" y2="562"/>
+    <line x1="650" y1="18" x2="650" y2="562"/>
+    <line x1="800" y1="18" x2="800" y2="562"/>
+    <line x1="940" y1="18" x2="940" y2="562"/>
+    <line x1="18" y1="100" x2="982" y2="100"/>
+    <line x1="18" y1="200" x2="982" y2="200"/>
+    <line x1="18" y1="300" x2="982" y2="300"/>
+    <line x1="18" y1="400" x2="982" y2="400"/>
+    <line x1="18" y1="500" x2="982" y2="500"/>
+  </g>
+
+  <!-- Title Badge Header -->
+  <g transform="translate(40, 36)">
+    <rect width="210" height="24" fill="#0022ff"/>
+    <text x="10" y="16" class="mono" font-size="11" font-weight="800" fill="#ffffff">CONTINUOUS FLOW MATRIX</text>
+    <text x="225" y="18" class="sans" font-size="16" font-weight="900" fill="#111111">規劃與實作的無限流動循環 (Continuous Loop)</text>
+    <text x="730" y="18" class="mono" font-size="11" font-weight="700" fill="#666666">TIME ELAPSED: 03h 19m | TOKENS: ~49.8M</text>
+  </g>
+
+  <!-- Big Central Infinite Orbit Paths -->
+  <!-- Outer Flowing Guide Track -->
+  <path d="M 230 200 C 230 110, 420 110, 500 240 C 580 370, 770 370, 770 280 C 770 190, 580 190, 500 320 C 420 450, 230 450, 230 360 Z" 
+        fill="none" stroke="#111111" stroke-width="8" stroke-linecap="round" opacity="0.12"/>
+
+  <!-- Main Animated Ribbon Line -->
+  <path d="M 230 200 C 230 110, 420 110, 500 240 C 580 370, 770 370, 770 280 C 770 190, 580 190, 500 320 C 420 450, 230 450, 230 360 Z" 
+        fill="none" stroke="#0022ff" stroke-width="4" stroke-dasharray="14 10" class="pulse-line"/>
+
+  <!-- Center Core Pulsing Hub -->
+  <g transform="translate(500, 280)" class="heavy-shadow">
+    <circle cx="0" cy="0" r="62" fill="#ffffff" stroke="#111111" stroke-width="3"/>
+    <circle cx="0" cy="0" r="54" fill="#d4ff00" stroke="#111111" stroke-width="1.5"/>
+    <text x="0" y="-12" class="mono" font-size="13" font-weight="800" fill="#111111" text-anchor="middle">PLAN ⇄ CODE</text>
+    <text x="0" y="8" class="sans" font-size="12" font-weight="900" fill="#0022ff" text-anchor="middle">雙向反饋迭代</text>
+    <text x="0" y="26" class="mono" font-size="9" font-weight="700" fill="#555555" text-anchor="middle">Matt Pocock Seam</text>
+  </g>
+
+  <!-- NODE 1: 概念追問 (17:17) -->
+  <g transform="translate(130, 130)" class="shadow">
+    <rect width="180" height="74" fill="#ffffff" stroke="#111111" stroke-width="2" rx="3"/>
+    <rect width="180" height="18" fill="#111111"/>
+    <text x="8" y="13" class="mono" font-size="10" font-weight="800" fill="#ffffff">01. GRILLING // 需求探詢</text>
+    <text x="10" y="38" class="sans" font-size="13" font-weight="900" fill="#111111">💡 無情追問與領域建模</text>
+    <text x="10" y="54" class="mono" font-size="10" fill="#555555">/grill-with-docs → GLOSSARY</text>
+    <text x="10" y="66" class="mono" font-size="9" font-weight="700" fill="#0022ff"># ADR 確定性種子與 Context 概念</text>
+  </g>
+
+  <!-- Flow Connector 1 -> 2 -->
+  <path d="M 310 167 L 370 167" fill="none" stroke="#0022ff" stroke-width="3" marker-end="url(#arrow-blue)"/>
+
+  <!-- NODE 2: 規格收斂 (17:35) -->
+  <g transform="translate(385, 130)" class="shadow">
+    <rect width="180" height="74" fill="#ffffff" stroke="#111111" stroke-width="2" rx="3"/>
+    <rect width="180" height="18" fill="#0022ff"/>
+    <text x="8" y="13" class="mono" font-size="10" font-weight="800" fill="#ffffff">02. SPECIFICATION // 規格</text>
+    <text x="10" y="38" class="sans" font-size="13" font-weight="900" fill="#111111">📐 原型驗證與敏捷規格</text>
+    <text x="10" y="54" class="mono" font-size="10" fill="#555555">/prototype → /to-spec</text>
+    <text x="10" y="66" class="mono" font-size="9" font-weight="700" fill="#0022ff"># 18 User Stories 完整驗收準則</text>
+  </g>
+
+  <!-- Flow Connector 2 -> 3 -->
+  <path d="M 565 167 L 625 167" fill="none" stroke="#0022ff" stroke-width="3" marker-end="url(#arrow-blue)"/>
+
+  <!-- NODE 3: TDD 實作 (17:50) -->
+  <g transform="translate(640, 130)" class="shadow">
+    <rect width="195" height="74" fill="#ffffff" stroke="#111111" stroke-width="2" rx="3"/>
+    <rect width="195" height="18" fill="#111111"/>
+    <text x="8" y="13" class="mono" font-size="10" font-weight="800" fill="#ffffff">03. IMPLEMENTATION // 實作</text>
+    <text x="10" y="38" class="sans" font-size="13" font-weight="900" fill="#111111">⚡ 測試驅動 (TDD) 引擎</text>
+    <text x="10" y="54" class="mono" font-size="10" fill="#555555">Headless Engine + Vitest 9/9</text>
+    <text x="10" y="66" class="mono" font-size="9" font-weight="700" fill="#e60000"># 0KB Web Audio + 9:16 卡片</text>
+  </g>
+
+  <!-- Flow Connector 3 -> 4 (Downward right arc) -->
+  <path d="M 740 204 C 740 250, 840 250, 840 310" fill="none" stroke="#0022ff" stroke-width="3" marker-end="url(#arrow-blue)"/>
+
+  <!-- NODE 4: 安全稽核 (19:40) -->
+  <g transform="translate(730, 315)" class="shadow">
+    <rect width="195" height="74" fill="#ffffff" stroke="#111111" stroke-width="2" rx="3"/>
+    <rect width="195" height="18" fill="#e60000"/>
+    <text x="8" y="13" class="mono" font-size="10" font-weight="800" fill="#ffffff">04. SECURITY // 縱深防禦</text>
+    <text x="10" y="38" class="sans" font-size="13" font-weight="900" fill="#111111">🛡️ 6 階段完整資安稽核</text>
+    <text x="10" y="54" class="mono" font-size="10" fill="#555555">/security-audit 模式</text>
+    <text x="10" y="66" class="mono" font-size="9" font-weight="700" fill="#e60000"># CSP + Referrer-Policy + Actions 最小權限</text>
+  </g>
+
+  <!-- Flow Connector 4 -> 5 -->
+  <path d="M 730 352 L 670 352" fill="none" stroke="#e60000" stroke-width="3" marker-end="url(#arrow-red)"/>
+
+  <!-- NODE 5: 雙軸審查 (20:00) -->
+  <g transform="translate(470, 385)" class="heavy-shadow">
+    <rect width="195" height="82" fill="#ffffff" stroke="#e60000" stroke-width="2.5" rx="3"/>
+    <rect width="195" height="18" fill="#e60000"/>
+    <text x="8" y="13" class="mono" font-size="10" font-weight="800" fill="#ffffff">05. CODE REVIEW // 雙軸審查</text>
+    <text x="10" y="38" class="sans" font-size="13" font-weight="900" fill="#e60000">🚨 揪出 Delta Time 物理 Bug</text>
+    <text x="10" y="54" class="mono" font-size="10" fill="#111111">漏乘 dt 導致高刷 120Hz 暴衝</text>
+    <text x="10" y="66" class="mono" font-size="9" font-weight="800" fill="#0022ff"># 引入 60fps 歸一化 + 跨刷新率測試</text>
+    <text x="10" y="77" class="mono" font-size="8" fill="#555555">清除 5 個舊 Shim 轉接檔</text>
+  </g>
+
+  <!-- Flow Connector 5 -> 6 -->
+  <path d="M 470 426 L 410 426" fill="none" stroke="#0022ff" stroke-width="3" marker-end="url(#arrow-blue)"/>
+
+  <!-- NODE 6: 契約制度 (20:15) -->
+  <g transform="translate(205, 385)" class="shadow">
+    <rect width="200" height="82" fill="#ffffff" stroke="#111111" stroke-width="2" rx="3"/>
+    <rect width="200" height="18" fill="#0022ff"/>
+    <text x="8" y="13" class="mono" font-size="10" font-weight="800" fill="#ffffff">06. CONTRACT // 審查契約</text>
+    <text x="10" y="38" class="sans" font-size="13" font-weight="900" fill="#111111">📜 建立審查退出與 A+C 鎖定</text>
+    <text x="10" y="54" class="mono" font-size="10" fill="#555555">CODE_REVIEW_CONTRACT.md</text>
+    <text x="10" y="66" class="mono" font-size="9" font-weight="800" fill="#0022ff"># 二輪封頂原則 + P0-P3 分級</text>
+    <text x="10" y="77" class="mono" font-size="8" font-weight="700" fill="#e60000"># 方案 A(Pro)+C(制度) 杜絕裁判兼球員</text>
+  </g>
+
+  <!-- Flow Connector 6 -> 7 (Upward left curve) -->
+  <path d="M 205 426 C 90 426, 90 310, 110 270" fill="none" stroke="#0022ff" stroke-width="3" marker-end="url(#arrow-blue)"/>
+
+  <!-- NODE 7: 開源發布 (20:25) -->
+  <g transform="translate(45, 235)" class="shadow">
+    <rect width="185" height="74" fill="#ffffff" stroke="#111111" stroke-width="2" rx="3"/>
+    <rect width="185" height="18" fill="#d4ff00"/>
+    <text x="8" y="13" class="mono" font-size="10" font-weight="800" fill="#111111">07. RELEASE // 開源門面</text>
+    <text x="10" y="38" class="sans" font-size="13" font-weight="900" fill="#111111">🚀 門面補全與 Pages 部署</text>
+    <text x="10" y="54" class="mono" font-size="10" fill="#555555">GitHub About + MIT License</text>
+    <text x="10" y="66" class="mono" font-size="9" font-weight="700" fill="#0022ff"># 向量預覽圖 + 專業 README</text>
+  </g>
+
+  <!-- Loop back from Node 7 to Node 1 -->
+  <path d="M 137 235 L 137 210" fill="none" stroke="#0022ff" stroke-width="3" stroke-dasharray="4 3" marker-end="url(#arrow-blue)"/>
+
+  <!-- Bottom Footer Quote -->
+  <g transform="translate(40, 525)">
+    <text x="0" y="0" class="mono" font-size="11" font-weight="700" fill="#555555">❯_ WORKFLOW INSIGHT: 規格不是靜態瀑布，實作反哺規格。大重構查骨架，二輪審查看毛細孔；雙重鎖定破除模型自審盲區。</text>
+  </g>
+</svg>

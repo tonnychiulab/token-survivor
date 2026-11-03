@@ -53,10 +53,15 @@
 3. **🎵 純代碼 Web Audio 合成器 (0 KB Extra Assets)**
    - **0 KB 額外音效檔下載**！使用原生 Web Audio API 即時運算 8-bit 波形合成（受傷、拾取、無敵與 Game Over）。
    - 內建持久化靜音開關（狀態自動儲存於 `localStorage`）。
-4. **📄 9:16 Brutalist 戰績體檢海報**
+4. **📱 PWA 離線快取與行動體感 (Mobile-First Experience)**
+   - **原生 Service Worker 離線快取**：支援手機「加到主畫面」如原生 App 秒開遊玩，完全離線運作，並具備版本更新 Toast。
+   - **相對位移拖曳 (Relative Drag)**：手指在螢幕任意處滑動即可操控，徹底解決大拇指遮蔽角色與障礙物痛點。
+   - **觸控震動反饋 (Haptic Feedback)**：整合 Web Vibration API，碰撞、吃道具與陣亡皆具備真實打擊體感。
+5. **📄 9:16 Brutalist 戰績體檢海報**
    - 純前端 Canvas 即時渲染一張 1080x1920 的矽谷機密文檔風格海報，一鍵下載直發 IG 限動與 X/Twitter！
-5. **🛡️ 嚴格雙軌安全防護**
-   - 內建嚴格 Content-Security-Policy (CSP) 與 Referrer-Policy，杜絕任何外部注入風險。
+6. **🛡️ 嚴格雙軌安全防護與審查契約**
+   - 內建嚴格 Content-Security-Policy (CSP, 含 worker/manifest 最小授權) 與 Referrer-Policy。
+   - 實踐**《程式碼審查契約》**與「**A+C 雙重鎖定**」，由獨立高階推理模型 (`Model: 'pro'`) 執行審查放行。
 
 ---
 

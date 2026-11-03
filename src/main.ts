@@ -68,7 +68,18 @@ resize();
 // Create Headless Engine
 const engine = createGameEngine({ seed: currentSeed, width, height });
 
-// Pointer Input tracking
+// Haptic Vibration helper
+function triggerVibrate(pattern: number | number[]): void {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate(pattern);
+    } catch (_) {
+      // Ignore vibration errors if restricted by browser security policies
+    }
+  }
+}
+
+// Pointer Input tracking (Mouse: direct coordinate tracking)
 function handlePointer(clientX: number, clientY: number): void {
   const rect = canvas.getBoundingClientRect();
   const x = clientX - rect.left;
@@ -77,12 +88,46 @@ function handlePointer(clientX: number, clientY: number): void {
 }
 
 window.addEventListener('mousemove', (e) => handlePointer(e.clientX, e.clientY));
-window.addEventListener('touchmove', (e) => {
-  if (e.touches[0]) handlePointer(e.touches[0].clientX, e.touches[0].clientY);
-}, { passive: true });
+
+// Touch Input tracking (Mobile: Relative Drag to eliminate thumb occlusion)
+let lastTouchX: number | null = null;
+let lastTouchY: number | null = null;
+
 window.addEventListener('touchstart', (e) => {
   audio.init();
-  if (e.touches[0]) handlePointer(e.touches[0].clientX, e.touches[0].clientY);
+  if (e.touches.length > 0) {
+    lastTouchX = e.touches[0].clientX;
+    lastTouchY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+  if (e.touches.length > 0 && lastTouchX !== null && lastTouchY !== null) {
+    const touch = e.touches[0];
+    const dx = touch.clientX - lastTouchX;
+    const dy = touch.clientY - lastTouchY;
+    lastTouchX = touch.clientX;
+    lastTouchY = touch.clientY;
+
+    const currentPrompt = engine.getState().promptNode;
+    engine.setInput(currentPrompt.targetX + dx, currentPrompt.targetY + dy);
+  }
+}, { passive: true });
+
+window.addEventListener('touchend', (e) => {
+  if (e.touches.length > 0) {
+    // Re-anchor to the remaining finger on screen
+    lastTouchX = e.touches[0].clientX;
+    lastTouchY = e.touches[0].clientY;
+  } else {
+    lastTouchX = null;
+    lastTouchY = null;
+  }
+}, { passive: true });
+
+window.addEventListener('touchcancel', () => {
+  lastTouchX = null;
+  lastTouchY = null;
 }, { passive: true });
 
 function startGame(): void {
@@ -136,31 +181,39 @@ function loop(timestamp: number): void {
       switch (ev.type) {
         case 'collision_boulder':
           audio.playHit();
+          triggerVibrate([40, 25, 40]);
           renderer.particles.explode(ev.x, ev.y, '#e60000', 14);
           renderer.tags.add('-20% 上下文 (429)', ev.x, ev.y - 25, '#e60000');
           break;
         case 'collision_nerf':
           audio.playNerf();
+          triggerVibrate(35);
           renderer.particles.explode(ev.x, ev.y, '#111111', 8);
           renderer.tags.add('📉 偷偷降智! 減速 40%', ev.x, ev.y - 25, '#111111');
           break;
         case 'collision_wall':
+          audio.playHit();
+          triggerVibrate(30);
           renderer.particles.explode(ev.x, ev.y, '#666666', 8);
           renderer.tags.add('道德審查阻礙!', ev.x, ev.y - 25, '#666666');
           break;
         case 'pickup_weight':
           audio.playPickup();
+          triggerVibrate(20);
           renderer.particles.explode(ev.x, ev.y, '#0022ff', 12);
           renderer.tags.add('+25% 開源權重!', ev.x, ev.y - 25, '#0022ff');
           break;
         case 'pickup_key':
           audio.playOverclock();
+          triggerVibrate([30, 20, 30]);
           renderer.tags.add('⚡ 5秒超頻無敵!', ev.x, ev.y - 35, '#0022ff');
           break;
         case 'smash_hazard':
+          triggerVibrate(15);
           renderer.particles.explode(ev.x, ev.y, '#0022ff', 10);
           break;
         case 'game_over':
+          triggerVibrate([80, 40, 80, 40, 120]);
           handleGameOver(state);
           break;
       }
@@ -230,3 +283,66 @@ document.getElementById('download-card-btn')?.addEventListener('click', () => {
     setTimeout(() => toast.classList.remove('show'), 2000);
   });
 });
+
+// PWA Service Worker & In-App Update Banner
+function initPWA(): void {
+  // Only register Service Worker under HTTP/HTTPS and skip on standalone HTML file
+  if (
+    'serviceWorker' in navigator &&
+    window.location.protocol.startsWith('http') &&
+    !window.location.pathname.endsWith('standalone.html')
+  ) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then((reg) => {
+        // If an update is waiting to activate, show prompt
+        if (reg.waiting) {
+          promptUpdate(reg.waiting);
+          return;
+        }
+
+        reg.addEventListener('updatefound', () => {
+          const installing = reg.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', () => {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              promptUpdate(installing);
+            }
+          });
+        });
+      }).catch((err) => {
+        console.warn('[PWA] Service Worker registration skipped:', err);
+      });
+
+      let refreshing = false;
+      const hadPreviousController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        // Only auto-reload if an active worker was already controlling (meaning this is a version update, not cold start)
+        if (hadPreviousController && !refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    });
+  }
+}
+
+function promptUpdate(waitingWorker: ServiceWorker): void {
+  const pwaToast = document.getElementById('pwa-toast');
+  const refreshBtn = document.getElementById('pwa-refresh-btn');
+  const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+  if (!pwaToast || !refreshBtn || !dismissBtn) return;
+  pwaToast.classList.remove('hidden');
+
+  refreshBtn.onclick = () => {
+    waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+    pwaToast.classList.add('hidden');
+  };
+
+  dismissBtn.onclick = () => {
+    pwaToast.classList.add('hidden');
+  };
+}
+
+initPWA();
+

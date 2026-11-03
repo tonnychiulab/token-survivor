@@ -14,15 +14,23 @@
   <meta name="twitter:card" content="summary_large_image">
 
   <!-- Defense-in-Depth Security Headers -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; worker-src 'self'; manifest-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self';">
   <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <!-- PWA & Mobile Web App Manifest -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TokenSurvivor">
+  <link rel="apple-touch-icon" href="./icons/icon-192.svg">
 
   <!-- SVG Favicon -->
   <link rel="icon" id="app-favicon" type="image/svg+xml" href="./assets/favicon-CjoKYbuG.svg">
 
   <!-- Modular Styles -->
-  <script type="module" crossorigin src="./assets/index-ma-axnJc.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-C_0G6Wb4.css">
+  <script type="module" crossorigin src="./assets/index-C6Kg601N.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-D6D0s_7h.css">
 </head>
 <body>
 
@@ -107,6 +115,15 @@
 
     <!-- Toast Notification -->
     <div id="toast">已複製戰績到剪貼簿！</div>
+
+    <!-- PWA Update Toast -->
+    <div id="pwa-toast" class="hidden">
+      <div class="pwa-toast-card">
+        <span class="pwa-toast-text">⚡ 偵測到新版本！</span>
+        <button id="pwa-refresh-btn" class="btn btn-secondary">立即重整</button>
+        <button id="pwa-dismiss-btn" class="btn-icon" title="忽略">✕</button>
+      </div>
+    </div>
   </div>
 
   <!-- Entry Script -->

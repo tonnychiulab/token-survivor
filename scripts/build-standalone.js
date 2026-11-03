@@ -37,6 +37,7 @@ if (fs.existsSync(distAssets)) {
 // Replace stylesheets and script with inline versions
 let standalone = baseHtml
   .replace(/<link rel="stylesheet" href="\.\/styles\/[^"]+">\s*/g, '')
+  .replace(/<link rel="manifest"[^>]*>\s*/g, '')
   .replace('</head>', `${combinedCss}\n</head>`)
   .replace(/<script type="module" src="\.\/src\/main\.ts"><\/script>/, `<script>\n${jsBundle}\n</script>`);
 

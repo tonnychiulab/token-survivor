@@ -9,6 +9,7 @@
 1. **二輪封頂原則 (Max 2-Round Policy)**：原始碼審查至多進行 2 輪，禁止無休止的來回辯論。
 2. **分級阻斷原則 (Severity Gating)**：僅有致命或重大瑕疵（P0/P1）得以阻擋版本發布，其餘項目限時轉為技術債清單（Tech Debt Backlog）。
 3. **契約化檢核清單 (Invariant Checklist)**：過往踩過的教訓必須固化為硬性自動化檢核項，不再依賴審查者的隨機專注力。
+4. **審查獨立性原則 (Review Independence / No Self-Judging)**：審查代理**嚴禁與代碼編寫者使用相同的模型配置**；必須實施「A + C 雙重鎖定」，強制指派高階推理模型（`Model: 'pro'`）或外部異構模型擔任主審裁判，徹底消除「裁判兼球員」之認知盲區。
 
 ---
 
@@ -75,6 +76,10 @@ flowchart TD
 ### 4. 縱深防禦與安全不變量 (Security Invariant)
 - [ ] 內容安全策略 (CSP)：HTML `<head>` 必須內嵌嚴格的 CSP 與 Referrer-Policy 宣告。
 - [ ] CI/CD 最小權限：GitHub Actions workflow 必須明訂最小所需 permissions。
+
+### 5. 審查獨立性與多模型不變量 (Independence & Model Gating Invariant)
+- [ ] 杜絕裁判兼球員：規格審查子代理**嚴禁使用 `Model: 'inherit'`** 繼承編碼代理之模型配置。
+- [ ] 推理階層升級：審查必須顯式指派 `Model: 'pro'`（或配置具備深度思考預算之獨立異構模型），確保審查者具備冷眼對抗性（Adversarial Inspection）能力。
 
 ---
 

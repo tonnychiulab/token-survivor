@@ -1,0 +1,18 @@
+{
+  "name": "token-survivor",
+  "version": "0.2.0",
+  "description": "Token Survivor - AI 巨獸限流生存戰",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build && node scripts/build-standalone.js",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  }
+}

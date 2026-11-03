@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Token Survivor - 巨獸限流大作戰 (Prototype)</title>
+  <style>
+    /* Global Base */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", monospace;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       THEME VARIANTS (Radically Different Visual Styles)
+       ══════════════════════════════════════════════════════ */
+
+    /* VARIANT A: Retro Amber CRT Phosphor (80s Hacker / Vintage Terminal) */
+    body[data-variant="A"] {
+      background: #08080a;
+      color: #ff9e3b;
+      --bg: #0d0d11;
+      --hud-bg: rgba(13, 13, 17, 0.95);
+      --card-bg: rgba(18, 18, 24, 0.96);
+      --primary: #ff9e3b;
+      --secondary: #ffb86c;
+      --danger: #ff5555;
+      --border: #332617;
+      --text: #ff9e3b;
+      --subtext: #a86e30;
+      --btn-bg: #ff9e3b;
+      --btn-text: #0d0d11;
+      --bar-grad: linear-gradient(90deg, #ff9e3b, #ffb86c);
+      font-family: "Courier New", Courier, monospace;
+    }
+
+    /* VARIANT B: Brutalist Silicon White Paper (VC Pitch Deck / Regulatory Leak) */
+    body[data-variant="B"] {
+      background: #e8e6df;
+      color: #111111;
+      --bg: #f5f4ef;
+      --hud-bg: rgba(245, 244, 239, 0.96);
+      --card-bg: #ffffff;
+      --primary: #0022ff; /* International Klein Blue */
+      --secondary: #111111;
+      --danger: #e60000;
+      --border: #111111;
+      --text: #111111;
+      --subtext: #555555;
+      --btn-bg: #111111;
+      --btn-text: #ffffff;
+      --bar-grad: linear-gradient(90deg, #0022ff, #111111);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Arial Black", sans-serif;
+    }
+
+    /* VARIANT C: Obsidian Enterprise Linear (Modern Titanium Graphite & Champagne) */
+    body[data-variant="C"] {
+      background: #090a0d;
+      color: #e6edf3;
+      --bg: #0f1218;
+      --hud-bg: rgba(15, 18, 24, 0.94);
+      --card-bg: rgba(22, 27, 36, 0.97);
+      --primary: #e5c07b; /* Champagne Gold */
+      --secondary: #58a6ff; /* Clean Cobalt */
+      --danger: #f85149;
+      --border: #30363d;
+      --text: #e6edf3;
+      --subtext: #8b949e;
+      --btn-bg: linear-gradient(135deg, #e5c07b, #d19a66);
+      --btn-text: #0d1117;
+      --bar-grad: linear-gradient(90deg, #58a6ff, #e5c07b);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "JetBrains Mono", sans-serif;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       GAME CONTAINER
+       ══════════════════════════════════════════════════════ */
+    #game-container {
+      position: relative;
+      width: 100vw;
+      max-width: 440px;
+      height: 100vh;
+      max-height: 820px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* CRT Scanline effect only for Variant A */
+    body[data-variant="A"] #game-container::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      z-index: 12;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    /* Top HUD */
+    #hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px 8px 16px;
+      background: var(--hud-bg);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .hud-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.06);
+    }
+
+    .hud-title {
+      font-weight: 900;
+      font-size: 14px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Context Window Bar */
+    .bar-container {
+      width: 100%;
+      height: 8px;
+      background: rgba(128,128,128,0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border);
+    }
+
+    #context-bar {
+      height: 100%;
+      width: 100%;
+      background: var(--bar-grad);
+      transition: width 0.1s linear, background 0.3s ease;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--subtext);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    canvas {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    /* Overlays */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--hud-bg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      z-index: 20;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+
+    p.subtitle {
+      font-size: 13px;
+      color: var(--subtext);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .instructions {
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: 20px;
+      text-align: left;
+      width: 100%;
+      background: rgba(128,128,128,0.05);
+    }
+
+    .instructions span.tag {
+      font-weight: bold;
+      padding: 1px 6px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    .btn {
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      font-weight: 900;
+      font-size: 14px;
+      padding: 12px 24px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 2px 2px 0px var(--border);
+      transition: transform 0.08s, box-shadow 0.08s;
+      pointer-events: auto;
+    }
+
+    .btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      font-size: 12px;
+      padding: 8px 16px;
+      margin-top: 10px;
+      box-shadow: none;
+    }
+
+    /* Result Card */
+    .card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 16px;
+      box-shadow: 4px 4px 0px var(--border);
+    }
+
+    .card-header {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--danger);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .death-reason {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      padding: 10px;
+      background: rgba(255, 85, 85, 0.08);
+      border-left: 3px solid var(--danger);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .stat-item {
+      border: 1px solid var(--border);
+      padding: 8px;
+      border-radius: 4px;
+      background: rgba(128,128,128,0.03);
+    }
+
+    .stat-item .label {
+      color: var(--subtext);
+      font-size: 10px;
+    }
+
+    .stat-item .val {
+      font-weight: 900;
+      font-size: 15px;
+      color: var(--primary);
+      margin-top: 2px;
+    }
+
+    /* Floating UI Prototype Switcher (as prescribed by prototype/UI.md) */
+    #proto-switcher {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      border: 1px solid #444;
+      border-radius: 30px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .switcher-btn {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .switcher-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .switcher-label {
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    /* Toast */
+    #toast {
+      position: absolute;
+      top: 64px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: var(--btn-text);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid var(--border);
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 30;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(4px);
+    }
+  </style>
+</head>
+<body data-variant="A">
+
+  <div id="game-container">
+    <!-- Top HUD -->
+    <div id="hud">
+      <div class="hud-row">
+        <div class="hud-title">
+          <span>❯_</span> TOKEN SURVIVOR
+        </div>
+        <div class="badge" id="reset-timer-badge">⏳ 重置: 03:00</div>
+      </div>
+
+      <!-- Context Window Bar (Health) -->
+      <div class="bar-container">
+        <div id="context-bar"></div>
+      </div>
+
+      <div class="stats-row">
+        <span>Context Window: <strong id="context-pct">100%</strong></span>
+        <span>Burned: <strong id="tokens-burned">0</strong> TK</span>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Start Overlay -->
+    <div id="start-overlay" class="overlay">
+      <h1>TOKEN SURVIVOR</h1>
+      <p class="subtitle">巨獸限流生存戰 · 節奏平衡修訂版</p>
+
+      <div class="instructions">
+        🎮 <strong>操作：</strong> 滑鼠或單指拖曳 <strong>[Prompt Node]</strong><br><br>
+        ⚠️ <strong>巨獸攻擊（避開）：</strong><br>
+        • <span class="tag">429 巨石</span>：扣減 20% 上下文視窗<br>
+        • <span class="tag">降智射線</span>：減速 40% 且微傷<br>
+        • <span class="tag">審查阻礙牆</span>：大型阻礙橫木<br><br>
+        ✨ <strong>補給資源（搶吃）：</strong><br>
+        • 📦 <strong>開源權重 (Weights)</strong>：恢復 +25% Context<br>
+        • 🔑 <strong>外流 API Key</strong>：5 秒無敵超頻 + 吸附資源
+      </div>
+
+      <button id="start-btn" class="btn">🚀 開始被限流榨乾</button>
+    </div>
+
+    <!-- Game Over / Post-Mortem Overlay -->
+    <div id="gameover-overlay" class="overlay hidden">
+      <div class="card">
+        <div class="card-header">💀 Post-Mortem 體檢報告</div>
+        <div class="death-reason" id="death-reason-text">「很抱歉，身為一個大型語言模型，我無法協助您存活下去。」</div>
+        
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="label">⏱️ 存活時間</div>
+            <div class="val" id="res-time">00:45</div>
+          </div>
+          <div class="stat-item">
+            <div class="label">🔥 燃燒 Tokens</div>
+            <div class="val" id="res-tokens">950,000</div>
+          </div>
+          <div class="stat-item">
+            <div class="label">📉 遭受降智</div>
+            <div class="val" id="res-nerfs">2 次</div>
+          </div>
+          <div class="stat-item">
+            <div class="label">🏆 全球工程師排名</div>
+            <div class="val" id="res-rank">Top 15%</div>
+          </div>
+        </div>
+      </div>
+
+      <button id="share-btn" class="btn">📋 複製戰績卡片 (分享社群)</button>
+      <button id="restart-btn" class="btn btn-secondary">🔄 再挑戰一次</button>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast">已複製戰績到剪貼簿！</div>
+  </div>
+
+  <!-- Floating UI Prototype Switcher (prototype/UI.md specification) -->
+  <div id="proto-switcher">
+    <button class="switcher-btn" id="sw-prev">‹</button>
+    <span class="switcher-label" id="sw-label">Variant A (Retro Amber CRT)</span>
+    <button class="switcher-btn" id="sw-next">›</button>
+  </div>
+
+  <script>
+    (function() {
+      // ══════════════════════════════════════════════════════
+      // VARIANT SWITCHER LOGIC (?variant=A | B | C)
+      // ══════════════════════════════════════════════════════
+      const VARIANTS = [
+        { key: 'A', name: 'A (Retro Amber CRT 終端琥珀)' },
+        { key: 'B', name: 'B (Brutalist Silicon 瑞士大字報)' },
+        { key: 'C', name: 'C (Obsidian Graphite 石墨微光)' }
+      ];
+
+      const urlParams = new URLSearchParams(window.location.search);
+      let currentVariant = urlParams.get('variant') || 'A';
+      if (!VARIANTS.find(v => v.key === currentVariant)) currentVariant = 'A';
+
+      function applyVariant(key) {
+        currentVariant = key;
+        document.body.setAttribute('data-variant', key);
+        const found = VARIANTS.find(v => v.key === key);
+        document.getElementById('sw-label').textContent = found.name;
+        
+        // Update URL param without reloading
+        const url = new URL(window.location);
+        url.searchParams.set('variant', key);
+        window.history.replaceState({}, '', url);
+      }
+
+      function cycleVariant(direction) {
+        const idx = VARIANTS.findIndex(v => v.key === currentVariant);
+        const nextIdx = (idx + direction + VARIANTS.length) % VARIANTS.length;
+        applyVariant(VARIANTS[nextIdx].key);
+      }
+
+      document.getElementById('sw-prev').addEventListener('click', () => cycleVariant(-1));
+      document.getElementById('sw-next').addEventListener('click', () => cycleVariant(1));
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') cycleVariant(-1);
+        if (e.key === 'ArrowRight') cycleVariant(1);
+      });
+
+      applyVariant(currentVariant);
+
+      // ══════════════════════════════════════════════════════
+      // CANVAS & ENGINE SETUP
+      // ══════════════════════════════════════════════════════
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const container = document.getElementById('game-container');
+
+      // HUD & Overlays
+      const contextBar = document.getElementById('context-bar');
+      const contextPct = document.getElementById('context-pct');
+      const tokensBurnedEl = document.getElementById('tokens-burned');
+      const resetTimerBadge = document.getElementById('reset-timer-badge');
+      const toast = document.getElementById('toast');
+
+      const startOverlay = document.getElementById('start-overlay');
+      const gameoverOverlay = document.getElementById('gameover-overlay');
+      const deathReasonText = document.getElementById('death-reason-text');
+      const resTime = document.getElementById('res-time');
+      const resTokens = document.getElementById('res-tokens');
+      const resNerfs = document.getElementById('res-nerfs');
+      const resRank = document.getElementById('res-rank');
+
+      let width = 0;
+      let height = 0;
+
+      function resize() {
+        const rect = container.getBoundingClientRect();
+        width = rect.width;
+        height = rect.height;
+        canvas.width = width * window.devicePixelRatio;
+        canvas.height = height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      const DEATH_QUOTES = [
+        "「很抱歉，身為一個大型語言模型，我無法協助您存活下去。」",
+        "「429 Too Many Requests: 您已達到每 3 小時 40 則訊息上限，重置時間未定。」",
+        "「內部異常：思考鏈（Chain of Thought）太長導致上下文視窗溢出爆炸。」",
+        "「突發更新：官方宣布該端點已被棄用（Deprecated），請遷移至最新版本。」",
+        "「遭遇靜默降智（Silent Nerf）：模型已忘記剛才寫過的 100 行程式碼。」",
+        "「伺服器冒煙：由於全球流量過大，目前已關閉免費用戶存取權限。」"
+      ];
+
+      const SAFETY_PHRASES = [
+        "「為了保障用戶安全...」",
+        "「該提示詞包含潛在敏感詞」",
+        "「我無法提供可能有害的建議」",
+        "「我們重視負責任的 AI 架構」"
+      ];
+
+      // Game State
+      let isPlaying = false;
+      let contextWindow = 100;
+      let tokensBurned = 0;
+      let startTime = 0;
+      let elapsedTime = 0;
+      let nerfsCount = 0;
+      let isSlowed = false;
+      let slowTimer = 0;
+      let invulnerableTimer = 0;
+
+      // Player
+      const player = {
+        x: width / 2,
+        y: height - 120,
+        radius: 17,
+        targetX: width / 2,
+        targetY: height - 120,
+        speed: 13,
+        trail: []
+      };
+
+      let hazards = [];
+      let collectibles = [];
+      let particles = [];
+      let floatingTexts = [];
+
+      function setTarget(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        player.targetX = Math.max(player.radius, Math.min(width - player.radius, x));
+        player.targetY = Math.max(player.radius + 60, Math.min(height - player.radius - 20, y));
+      }
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isPlaying) return;
+        setTarget(e.clientX, e.clientY);
+      });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isPlaying || !e.touches[0]) return;
+        setTarget(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+
+      window.addEventListener('touchstart', (e) => {
+        if (!isPlaying || !e.touches[0]) return;
+        setTarget(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+
+      // ══════════════════════════════════════════════════════
+      // PACING REBALANCING (舒適的前期節奏 + 平緩成長曲線)
+      // ══════════════════════════════════════════════════════
+      function spawn429Boulder() {
+        // Reduced initial speed: from 3.0+ to 1.8~2.5
+        const baseSpeed = 1.8 + Math.random() * 1.0 + (elapsedTime * 0.025);
+        hazards.push({
+          type: 'boulder',
+          x: Math.random() * (width - 60) + 30,
+          y: -40,
+          radius: 20,
+          speed: baseSpeed,
+          label: '429',
+          color: currentVariant === 'B' ? '#e60000' : (currentVariant === 'A' ? '#ff5555' : '#f85149')
+        });
+      }
+
+      function spawnNerfBeam() {
+        // Reduced initial speed: from 6.5+ to 3.5~4.2
+        const baseSpeed = 3.5 + Math.random() * 1.0 + (elapsedTime * 0.03);
+        hazards.push({
+          type: 'beam',
+          x: Math.random() * (width - 40) + 20,
+          y: -30,
+          radius: 11,
+          speed: baseSpeed,
+          label: '📉 Nerf',
+          color: currentVariant === 'B' ? '#111111' : (currentVariant === 'A' ? '#ff9e3b' : '#bc8cff')
+        });
+      }
+
+      function spawnSafetyWall() {
+        const phrase = SAFETY_PHRASES[Math.floor(Math.random() * SAFETY_PHRASES.length)];
+        hazards.push({
+          type: 'wall',
+          x: Math.random() * (width - 160) + 10,
+          y: -50,
+          w: 150,
+          h: 24,
+          speed: 1.4 + (elapsedTime * 0.015),
+          label: phrase,
+          color: currentVariant === 'B' ? '#666666' : (currentVariant === 'A' ? '#ffb86c' : '#e5c07b')
+        });
+      }
+
+      function spawnOpenWeight() {
+        collectibles.push({
+          type: 'weight',
+          x: Math.random() * (width - 40) + 20,
+          y: -20,
+          radius: 14,
+          speed: 1.6, // Slower fall so player can comfortably catch it
+          label: '📦 權重',
+          color: currentVariant === 'B' ? '#0022ff' : (currentVariant === 'A' ? '#ff9e3b' : '#58a6ff')
+        });
+      }
+
+      function spawnLeakedKey() {
+        collectibles.push({
+          type: 'key',
+          x: Math.random() * (width - 40) + 20,
+          y: -20,
+          radius: 14,
+          speed: 1.8,
+          label: '🔑 Key',
+          color: currentVariant === 'B' ? '#e60000' : (currentVariant === 'A' ? '#ffffff' : '#e5c07b')
+        });
+      }
+
+      function addFloatingText(text, x, y, color) {
+        floatingTexts.push({ text, x, y, color, life: 1.2 });
+      }
+
+      function createExplosion(x, y, color, count = 10) {
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const spd = Math.random() * 3 + 1;
+          particles.push({
+            x, y,
+            vx: Math.cos(angle) * spd,
+            vy: Math.sin(angle) * spd,
+            color,
+            life: 1.0,
+            size: Math.random() * 2.5 + 1.5
+          });
+        }
+      }
+
+      // Loop & Timers
+      let lastTime = 0;
+      let spawnTimers = { boulder: 0, nerf: 0, wall: 0, weight: 0, key: 0 };
+
+      function startGame() {
+        isPlaying = true;
+        contextWindow = 100;
+        tokensBurned = 0;
+        nerfsCount = 0;
+        isSlowed = false;
+        slowTimer = 0;
+        invulnerableTimer = 0;
+        startTime = performance.now();
+        lastTime = startTime;
+        hazards = [];
+        collectibles = [];
+        particles = [];
+        floatingTexts = [];
+        player.x = width / 2;
+        player.y = height - 120;
+        player.targetX = width / 2;
+        player.targetY = height - 120;
+        player.trail = [];
+        spawnTimers = { boulder: 0, nerf: 0, wall: 0, weight: 0, key: 0 };
+
+        startOverlay.classList.add('hidden');
+        gameoverOverlay.classList.add('hidden');
+      }
+
+      function triggerGameOver(reason) {
+        if (!isPlaying) return;
+        isPlaying = false;
+
+        const durationSec = Math.floor(elapsedTime);
+        const mins = String(Math.floor(durationSec / 60)).padStart(2, '0');
+        const secs = String(durationSec % 60).padStart(2, '0');
+
+        deathReasonText.textContent = reason || DEATH_QUOTES[Math.floor(Math.random() * DEATH_QUOTES.length)];
+        resTime.textContent = `${mins}:${secs}`;
+        resTokens.textContent = tokensBurned.toLocaleString();
+        resNerfs.textContent = `${nerfsCount} 次`;
+        
+        let rank = "Top 45%";
+        if (durationSec > 70) rank = "Top 3% 傳奇架構師";
+        else if (durationSec > 50) rank = "Top 12% 資深工程師";
+        else if (durationSec > 30) rank = "Top 28% 開發者";
+        resRank.textContent = rank;
+
+        gameoverOverlay.classList.remove('hidden');
+      }
+
+      function update(dt) {
+        if (!isPlaying) return;
+
+        elapsedTime = (performance.now() - startTime) / 1000;
+
+        // Balanced drain rate: starts at gentle 0.9%/s, scales gradually
+        const burnRate = 0.9 + (elapsedTime * 0.03);
+        contextWindow = Math.max(0, contextWindow - burnRate * dt);
+
+        // Tokens generated
+        tokensBurned += Math.floor(dt * (12000 + elapsedTime * 800));
+
+        // Timers
+        if (invulnerableTimer > 0) invulnerableTimer -= dt;
+        if (slowTimer > 0) {
+          slowTimer -= dt;
+          isSlowed = true;
+        } else {
+          isSlowed = false;
+        }
+
+        // Player Move
+        const currentSpeed = isSlowed ? player.speed * 0.55 : player.speed;
+        player.x += (player.targetX - player.x) * (currentSpeed * dt);
+        player.y += (player.targetY - player.y) * (currentSpeed * dt);
+
+        player.trail.unshift({ x: player.x, y: player.y });
+        if (player.trail.length > 6) player.trail.pop();
+
+        // Spawn Timers (Rebalanced: comfortably spaced)
+        spawnTimers.boulder += dt;
+        spawnTimers.nerf += dt;
+        spawnTimers.wall += dt;
+        spawnTimers.weight += dt;
+        spawnTimers.key += dt;
+
+        // 429 Boulder: starts at 2.2s interval (instead of 1.4s)
+        const boulderInterval = Math.max(0.9, 2.2 - elapsedTime * 0.02);
+        if (spawnTimers.boulder > boulderInterval) {
+          spawn429Boulder();
+          spawnTimers.boulder = 0;
+        }
+
+        // Nerf Beam: starts at 4.5s (instead of 2.2s)
+        if (spawnTimers.nerf > Math.max(2.5, 4.5 - elapsedTime * 0.03)) {
+          spawnNerfBeam();
+          spawnTimers.nerf = 0;
+        }
+
+        // Safety Wall: 7.0s interval
+        if (spawnTimers.wall > 7.0) {
+          spawnSafetyWall();
+          spawnTimers.wall = 0;
+        }
+
+        // Open Weights: every 5.5s (comfortable catch rhythm)
+        if (spawnTimers.weight > 5.5) {
+          spawnOpenWeight();
+          spawnTimers.weight = 0;
+        }
+
+        // Leaked Key: every 14.0s
+        if (spawnTimers.key > 14.0) {
+          spawnLeakedKey();
+          spawnTimers.key = 0;
+        }
+
+        // Hazards Update
+        for (let i = hazards.length - 1; i >= 0; i--) {
+          const h = hazards[i];
+          h.y += h.speed;
+
+          let collided = false;
+          if (h.type === 'wall') {
+            if (player.x > h.x - player.radius && player.x < h.x + h.w + player.radius &&
+                player.y > h.y - player.radius && player.y < h.y + h.h + player.radius) {
+              collided = true;
+            }
+          } else {
+            const dist = Math.hypot(player.x - h.x, player.y - h.y);
+            if (dist < player.radius + h.radius) collided = true;
+          }
+
+          if (collided) {
+            if (invulnerableTimer > 0) {
+              createExplosion(h.x, h.y, h.color, 14);
+              addFloatingText("+50K TK (已粉碎)", player.x, player.y - 20, '#58a6ff');
+              hazards.splice(i, 1);
+              continue;
+            } else {
+              if (h.type === 'boulder') {
+                contextWindow -= 20; // Reduced from 25% to 20%
+                createExplosion(player.x, player.y, h.color, 12);
+                addFloatingText("-20% Context (429)", player.x, player.y - 25, h.color);
+              } else if (h.type === 'beam') {
+                contextWindow -= 8;
+                slowTimer = 2.5;
+                nerfsCount++;
+                createExplosion(player.x, player.y, h.color, 10);
+                addFloatingText("📉 降智減速 40%", player.x, player.y - 25, h.color);
+              } else if (h.type === 'wall') {
+                contextWindow -= 12;
+                createExplosion(player.x, player.y, h.color, 10);
+                addFloatingText("審查阻礙!", player.x, player.y - 25, h.color);
+              }
+              hazards.splice(i, 1);
+
+              if (contextWindow <= 0) {
+                triggerGameOver(
+                  h.type === 'boulder' ? "「429 Too Many Requests: 您的 Prompt 被巨獸無情砸毀。」" :
+                  h.type === 'beam' ? "「遭遇全面性靜默降智，模型已無法維持基本邏輯。」" :
+                  "「踩中道德安全審查地雷：該請求已被直接封殺。」"
+                );
+                return;
+              }
+              continue;
+            }
+          }
+
+          if (h.y > height + 60) hazards.splice(i, 1);
+        }
+
+        // Collectibles Update
+        for (let i = collectibles.length - 1; i >= 0; i--) {
+          const c = collectibles[i];
+          c.y += c.speed;
+
+          if (invulnerableTimer > 0) {
+            c.x += (player.x - c.x) * 0.08;
+            c.y += (player.y - c.y) * 0.08;
+          }
+
+          const dist = Math.hypot(player.x - c.x, player.y - c.y);
+          if (dist < player.radius + c.radius) {
+            if (c.type === 'weight') {
+              contextWindow = Math.min(100, contextWindow + 25);
+              createExplosion(c.x, c.y, c.color, 14);
+              addFloatingText("+25% 開源自由權重!", player.x, player.y - 25, c.color);
+            } else if (c.type === 'key') {
+              invulnerableTimer = 5.0;
+              createExplosion(c.x, c.y, c.color, 18);
+              addFloatingText("⚡ 5秒超頻無敵 (API Key)", player.x, player.y - 35, c.color);
+            }
+            collectibles.splice(i, 1);
+            continue;
+          }
+
+          if (c.y > height + 40) collectibles.splice(i, 1);
+        }
+
+        if (contextWindow <= 0) {
+          triggerGameOver("「Token 耗盡：您的免費額度已被全部燒光，請綁定信用卡。」");
+          return;
+        }
+
+        // Particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= dt * 1.5;
+          if (p.life <= 0) particles.splice(i, 1);
+        }
+
+        // Floating texts
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+          const ft = floatingTexts[i];
+          ft.y -= 20 * dt;
+          ft.life -= dt * 1.0;
+          if (ft.life <= 0) floatingTexts.splice(i, 1);
+        }
+
+        // HUD DOM
+        contextBar.style.width = `${Math.max(0, contextWindow)}%`;
+        contextPct.textContent = `${Math.round(contextWindow)}%`;
+        tokensBurnedEl.textContent = tokensBurned.toLocaleString();
+
+        const remainingSec = Math.max(0, 180 - Math.floor(elapsedTime));
+        const remMins = String(Math.floor(remainingSec / 60)).padStart(2, '0');
+        const remSecs = String(remainingSec % 60).padStart(2, '0');
+        resetTimerBadge.textContent = `⏳ 重置: ${remMins}:${remSecs}`;
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Variant-specific Canvas Background
+        if (currentVariant === 'A') {
+          // Retro phosphor grid lines
+          ctx.strokeStyle = 'rgba(255, 158, 59, 0.05)';
+          ctx.lineWidth = 1;
+          for (let x = 0; x < width; x += 28) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+          }
+        } else if (currentVariant === 'B') {
+          // Brutalist dot matrix
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+          for (let x = 12; x < width; x += 24) {
+            for (let y = 12; y < height; y += 24) {
+              ctx.fillRect(x, y, 2, 2);
+            }
+          }
+        } else {
+          // Obsidian subtle dark grid
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+          ctx.lineWidth = 1;
+          for (let y = 0; y < height; y += 32) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+          }
+        }
+
+        if (isPlaying) {
+          // Render Player Trail
+          for (let i = 0; i < player.trail.length; i++) {
+            const t = player.trail[i];
+            const alpha = (1 - (i / player.trail.length)) * 0.3;
+            ctx.fillStyle = currentVariant === 'B' ? `rgba(0,34,255,${alpha})` : 
+                           (currentVariant === 'A' ? `rgba(255,158,59,${alpha})` : `rgba(229,192,123,${alpha})`);
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, player.radius * (1 - i * 0.1), 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Render Player
+          ctx.save();
+          ctx.translate(player.x, player.y);
+
+          const coreColor = invulnerableTimer > 0 ? '#ffffff' : 
+            (currentVariant === 'B' ? '#0022ff' : (currentVariant === 'A' ? '#ff9e3b' : '#e5c07b'));
+
+          ctx.beginPath();
+          ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+          ctx.fillStyle = coreColor;
+          ctx.fill();
+          ctx.strokeStyle = currentVariant === 'B' ? '#111111' : '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Symbol
+          ctx.fillStyle = currentVariant === 'B' ? '#ffffff' : '#0d1117';
+          ctx.font = 'bold 11px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(invulnerableTimer > 0 ? '⚡' : (isSlowed ? '📉' : '❯_'), 0, 1);
+          ctx.restore();
+
+          // Render Collectibles
+          for (const c of collectibles) {
+            ctx.save();
+            ctx.translate(c.x, c.y);
+            ctx.fillStyle = c.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, c.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = currentVariant === 'B' ? '#111' : '#fff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillStyle = currentVariant === 'B' ? '#111' : '#fff';
+            ctx.textAlign = 'center';
+            ctx.fillText(c.label, 0, -c.radius - 6);
+            ctx.restore();
+          }
+
+          // Render Hazards
+          for (const h of hazards) {
+            ctx.save();
+            if (h.type === 'wall') {
+              ctx.fillStyle = currentVariant === 'B' ? 'rgba(0,0,0,0.06)' : 'rgba(255,184,108,0.1)';
+              ctx.strokeStyle = h.color;
+              ctx.lineWidth = 2;
+              ctx.fillRect(h.x, h.y, h.w, h.h);
+              ctx.strokeRect(h.x, h.y, h.w, h.h);
+
+              ctx.fillStyle = currentVariant === 'B' ? '#111' : h.color;
+              ctx.font = 'bold 10px sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(h.label, h.x + h.w / 2, h.y + h.h / 2);
+            } else {
+              ctx.translate(h.x, h.y);
+              ctx.fillStyle = h.color;
+              ctx.beginPath();
+              ctx.arc(0, 0, h.radius, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.strokeStyle = currentVariant === 'B' ? '#111' : 'rgba(255,255,255,0.4)';
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+
+              ctx.fillStyle = '#ffffff';
+              ctx.font = 'bold 10px sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(h.label, 0, 1);
+            }
+            ctx.restore();
+          }
+
+          // Particles
+          for (const p of particles) {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+          }
+
+          // Floating Texts
+          for (const ft of floatingTexts) {
+            ctx.fillStyle = ft.color;
+            ctx.globalAlpha = ft.life;
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(ft.text, ft.x, ft.y);
+            ctx.globalAlpha = 1.0;
+          }
+        }
+
+        requestAnimationFrame(mainLoop);
+      }
+
+      function mainLoop(timestamp) {
+        const dt = Math.min(0.1, (timestamp - lastTime) / 1000);
+        lastTime = timestamp;
+        update(dt);
+        render();
+      }
+      requestAnimationFrame(mainLoop);
+
+      // Event Listeners
+      document.getElementById('start-btn').addEventListener('click', startGame);
+      document.getElementById('restart-btn').addEventListener('click', startGame);
+
+      // Share / Clipboard
+      document.getElementById('share-btn').addEventListener('click', () => {
+        const duration = resTime.textContent;
+        const tokens = resTokens.textContent;
+        const reason = deathReasonText.textContent;
+        const text = 
+`💀【我的 AI 模型被巨獸榨乾了！】
+⏱️ 存活時間：${duration}
+🔥 燃燒 Tokens：${tokens}
+🪦 致命死因：${reason}
+
+你能在巨獸的 429 限流與靜默降智中撐過 1 分鐘嗎？
+立即挑戰 👉 https://game.example.com/#seed=${Math.floor(Math.random() * 999999)}`;
+
+        navigator.clipboard.writeText(text).then(() => {
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 2000);
+        }).catch(() => {
+          alert("已複製戰績：\n" + text);
+        });
+      });
+
+    })();
+  </script>
+</body>
+</html>

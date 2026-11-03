@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>❯_ TOKEN SURVIVOR | 巨獸限流生存戰</title>
+  
+  <!-- Browser Identity & Meta Consistency -->
+  <meta name="description" content="你能從 AI 巨獸的 429 限流、道德審查與靜默降智中存活超過 60 秒嗎？純前端、秒開、高傳播迷因生存遊戲。">
+  <meta name="theme-color" content="#f5f4ef">
+  <meta property="og:title" content="❯_ TOKEN SURVIVOR | 巨獸限流生存戰">
+  <meta property="og:description" content="你能從 AI 巨獸的 429 限流、道德審查與靜默降智中存活超過 60 秒嗎？挑戰我的戰績！">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- SVG Favicon -->
+  <link rel="icon" id="app-favicon" type="image/svg+xml" href="./assets/favicon-CjoKYbuG.svg">
+
+  <!-- Modular Styles -->
+  <script type="module" crossorigin src="./assets/index-CAN9rLzu.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DIBbjSe6.css">
+</head>
+<body>
+
+  <div id="game-container">
+    <!-- Top HUD -->
+    <div id="hud">
+      <div class="hud-row">
+        <div class="hud-title">
+          <span>❯_</span> TOKEN SURVIVOR
+        </div>
+        <div class="hud-actions">
+          <div class="badge" id="seed-badge">SEED #123456</div>
+          <button class="btn-icon" id="mute-btn" title="切換靜音">🔊</button>
+        </div>
+      </div>
+
+      <!-- Context Window Bar (Health) -->
+      <div class="bar-container">
+        <div id="context-bar"></div>
+      </div>
+
+      <div class="stats-row">
+        <span>Context: <strong id="context-pct">100%</strong></span>
+        <span>Burned: <strong id="tokens-burned">0</strong> TK</span>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Start Overlay -->
+    <div id="start-overlay" class="overlay">
+      <h1>TOKEN SURVIVOR</h1>
+      <p class="subtitle">AI 巨獸限流生存戰 · 模組化重構版</p>
+
+      <div class="instructions">
+        🎮 <strong>操作：</strong> 手機單指滑動 / 滑鼠拖曳 <strong>[Prompt Node]</strong><br><br>
+        ⚠️ <strong>巨獸阻礙（避開）：</strong><br>
+        • <span class="tag">429 巨石</span>：直接扣除 20% Context<br>
+        • <span class="tag">📉 降智射線</span>：減速 40% (2.5秒) 且微傷<br>
+        • <span class="tag">道德審查牆</span>：身為大型語言模型...擋道！<br><br>
+        ✨ <strong>補給資源（搶吃）：</strong><br>
+        • 📦 <strong>開源權重</strong>：恢復 +25% Context 上下文<br>
+        • 🔑 <strong>外流 API Key</strong>：5 秒超頻無敵 + 磁鐵吸附
+      </div>
+
+      <button id="start-btn" class="btn">🚀 開始被限流榨乾</button>
+    </div>
+
+    <!-- Game Over / Post-Mortem Overlay -->
+    <div id="gameover-overlay" class="overlay hidden">
+      <div class="card">
+        <div class="card-header">💀 CONFIDENTIAL // POST-MORTEM 體檢報告</div>
+        <div class="death-reason" id="death-reason-text">「很抱歉，身為一個大型語言模型，我無法協助您存活下去。」</div>
+        
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="label">⏱️ 存活時間</div>
+            <div class="val" id="res-time">00:45</div>
+          </div>
+          <div class="stat-item">
+            <div class="label">🔥 燃燒虛擬 Tokens</div>
+            <div class="val" id="res-tokens">950,000</div>
+          </div>
+          <div class="stat-item">
+            <div class="label">📉 遭受降智次數</div>
+            <div class="val" id="res-nerfs">2 次</div>
+          </div>
+          <div class="stat-item">
+            <div class="label">🏆 全球工程師排名</div>
+            <div class="val" id="res-rank">Top 15%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button id="share-btn" class="btn btn-accent">📋 複製戰績文字 (分享社群)</button>
+        <button id="download-card-btn" class="btn">🖼️ 下載 9:16 戰績圖卡</button>
+        <button id="restart-btn" class="btn btn-secondary">🔄 再挑戰一次同一盤面</button>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">已複製戰績到剪貼簿！</div>
+  </div>
+
+  <!-- Entry Script -->
+</body>
+</html>

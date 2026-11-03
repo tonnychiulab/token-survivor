@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGameEngine } from '../src/engine.js';
+import { createGameEngine } from '../src/engine/engine.js';
 
 describe('GameEngine - Collision Detection & Debuffs (Ticket 02)', () => {
   it('should reduce context window by 20% on 429 Boulder collision and emit collision_boulder event', () => {

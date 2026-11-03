@@ -212,7 +212,8 @@ export function createGameEngine(config: GameEngineConfig): GameEngine {
     // Update hazards & detect collisions
     for (let i = hazards.length - 1; i >= 0; i--) {
       const h = hazards[i];
-      h.y += h.speed;
+      // Frame-rate independent displacement calibrated to 60fps base speed
+      h.y += h.speed * dt * 60;
 
       let collided = false;
       if (h.type === 'wall' && h.w && h.h) {
@@ -277,11 +278,12 @@ export function createGameEngine(config: GameEngineConfig): GameEngine {
     // Update collectibles & detect pickups
     for (let i = collectibles.length - 1; i >= 0; i--) {
       const c = collectibles[i];
-      c.y += c.speed;
+      // Frame-rate independent displacement calibrated to 60fps base speed
+      c.y += c.speed * dt * 60;
 
       if (invulnerableTimer > 0) {
-        c.x += (promptNode.x - c.x) * 0.08;
-        c.y += (promptNode.y - c.y) * 0.08;
+        c.x += (promptNode.x - c.x) * (0.08 * dt * 60);
+        c.y += (promptNode.y - c.y) * (0.08 * dt * 60);
       }
 
       const dist = Math.hypot(promptNode.x - c.x, promptNode.y - c.y);

@@ -1,6 +1,6 @@
 {
   "name": "token-survivor",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Token Survivor - AI 巨獸限流生存戰",
   "type": "module",
   "scripts": {

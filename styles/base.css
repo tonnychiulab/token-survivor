@@ -21,6 +21,10 @@
   touch-action: none;
 }
 
+html, body {
+  overscroll-behavior: none;
+}
+
 body {
   background: #e8e6df;
   color: var(--text);
@@ -30,6 +34,7 @@ body {
   justify-content: center;
   min-height: 100vh;
   overflow: hidden;
+  overscroll-behavior: none;
   font-family: var(--font-sans);
 }
 

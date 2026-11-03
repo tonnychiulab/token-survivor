@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGameEngine } from '../src/engine.js';
+import { createGameEngine } from '../src/engine/engine.js';
 
 describe('GameEngine - Deterministic Core & Context Drain (Ticket 01)', () => {
   it('should initialize with default state and full context window', () => {
@@ -64,5 +64,27 @@ describe('GameEngine - Deterministic Core & Context Drain (Ticket 01)', () => {
     const state = engine.getState();
     expect(state.player.x).toBeLessThan(200); // Moved from center towards 50
     expect(state.player.y).toBeLessThan(580); // Moved from bottom towards 150
+  });
+
+  it('should maintain frame-rate independence between 60Hz and 120Hz simulations', () => {
+    const engine60 = createGameEngine({ seed: 9999, width: 400, height: 700 });
+    const engine120 = createGameEngine({ seed: 9999, width: 400, height: 700 });
+
+    // Simulate 3.0 seconds
+    for (let i = 0; i < 180; i++) {
+      engine60.tick(1 / 60);
+    }
+    for (let i = 0; i < 360; i++) {
+      engine120.tick(1 / 120);
+    }
+
+    const state60 = engine60.getState();
+    const state120 = engine120.getState();
+
+    expect(state60.hazards.length).toBeGreaterThan(0);
+    expect(state60.hazards.length).toBe(state120.hazards.length);
+    for (let i = 0; i < state60.hazards.length; i++) {
+      expect(state60.hazards[i].y).toBeCloseTo(state120.hazards[i].y, 0);
+    }
   });
 });

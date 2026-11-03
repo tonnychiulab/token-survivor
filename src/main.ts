@@ -125,8 +125,8 @@ function loop(timestamp: number): void {
   const dt = Math.min(0.1, (timestamp - lastTime) / 1000);
   lastTime = timestamp;
 
-  const stateBefore = engine.getState();
-  if (stateBefore.isRunning && !stateBefore.isGameOver) {
+  const current = engine.getState();
+  if (current.isRunning && !current.isGameOver) {
     engine.tick(dt);
     const state = engine.getState();
 
